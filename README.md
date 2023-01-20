@@ -11,7 +11,7 @@ url=<Database URL>
 username=<Database Username>
 password=<Database Password>
 ```
-* AnimSearch-OnnadaAllAnimAPI.txt
+* AnimSearch_OnnadaAllAnimAPI.txt
 ```ini
 [properties]
 path_for_anim=<anim images save directory>
