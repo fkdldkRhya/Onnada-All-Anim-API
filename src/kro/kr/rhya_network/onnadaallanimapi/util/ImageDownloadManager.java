@@ -1,39 +1,14 @@
 package kro.kr.rhya_network.onnadaallanimapi.util;
 
-import java.io.FileOutputStream;
+import kro.kr.rhya_network.onnadaallanimapi.dto.ImageDownloadDTO;
+
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.URL;
+import java.util.ArrayList;
 
 public class ImageDownloadManager {
-    public void saveImage(String input, String path) throws IOException {
-        URL url = null;
-        InputStream in = null;
-        OutputStream out = null;
-        try {
-            url = new URL(input);
-            in = url.openStream();
-            out = new FileOutputStream(path);
+    public static ArrayList<ImageDownloadDTO> imageDownloadDTOS = new ArrayList<>();
 
-            while(true){
-                int data = in.read();
-
-                if(data == -1)
-                    break;
-
-                out.write(data);
-            }
-
-            in.close();
-            out.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-
-            throw e;
-        }finally {
-            if(in != null){in.close();}
-            if(out != null){out.close();}
-        }
+    public void saveImage(String input, String path, ImageDownloadDTO.ImageType imageType, Long id) throws IOException {
+        imageDownloadDTOS.add(new ImageDownloadDTO(imageType, id, path, input));
     }
 }

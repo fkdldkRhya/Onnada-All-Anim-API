@@ -1,8 +1,10 @@
 package kro.kr.rhya_network.onnadaallanimapi.core;
 
 import kro.kr.rhya_network.onnadaallanimapi.Main;
+import kro.kr.rhya_network.onnadaallanimapi.dto.ImageDownloadDTO;
 import kro.kr.rhya_network.onnadaallanimapi.util.DatabaseManager;
 import kro.kr.rhya_network.onnadaallanimapi.util.ImageDownloadManager;
+import org.apache.commons.lang3.time.StopWatch;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -27,6 +29,8 @@ public class HTMLParsingManager {
     public void setAnimDataList() throws IOException, ParseException, SQLException, ClassNotFoundException {
         // URL 정보
         final String QUARTER_ROOT_URL = "https://onnada.com/anime/quarter";
+
+        System.out.println("Loading quarterly animation data...");
 
         // Connection web
         Connection rootConnection = Jsoup.connect(QUARTER_ROOT_URL);
@@ -54,15 +58,28 @@ public class HTMLParsingManager {
         }
 
         if (quartersJSONObject != null) {
+            System.out.println("Importing quarterly animation data succeeded!");
+
             JSONArray quartersJSONArray = (JSONArray)((JSONObject) quartersJSONObject.get("result")).get("items");
+
+            System.out.println("Start extracting animation and character data!");
 
             for (int rootQuartersIndex = 0; rootQuartersIndex < quartersJSONArray.size(); rootQuartersIndex ++) {
                 JSONArray quarterJSONArray = (JSONArray) quartersJSONArray.get(rootQuartersIndex);
+
+                System.out.println(String.format("Total progress: %d / %d", rootQuartersIndex, quartersJSONArray.size()));
+
                 for (int subQuartersIndex = 0; subQuartersIndex < quarterJSONArray.size(); subQuartersIndex ++) {
                     String quarter = (String) quarterJSONArray.get(subQuartersIndex);
 
+                    System.out.println(String.format("Animated quarter: %s", quarter));
+                    System.out.println(String.format("Whether animation data extraction is in progress: %b", dateChecker(quarter)));
+
                     if (!dateChecker(quarter))
                         continue;
+
+                    System.out.println(String.format("%s Start Data Extraction for Quarterly.", quarter));
+                    System.out.println("Refining quarter data...");
 
                     final String quarterURL = String.format("%s/%s", QUARTER_ROOT_URL, quarter);
                     // Connection
@@ -89,40 +106,66 @@ public class HTMLParsingManager {
                         }
                     }
 
+                    System.out.println("Quarterly data purification successful!");
+
                     if (quartersJSONObject != null) {
                         JSONObject quarterAnimJSONArrayOrJSONObjectCheckTemp = (JSONObject) quarterAnimJSONObject.get("result");
                         if (quarterAnimJSONArrayOrJSONObjectCheckTemp.get("items") instanceof JSONArray) {
                             JSONArray quartersAnimListJSONArray = (JSONArray) quarterAnimJSONArrayOrJSONObjectCheckTemp.get("items");
                             for (int animListIndex = 0 ; animListIndex < quartersAnimListJSONArray.size(); animListIndex ++) {
                                 JSONArray quarterAnimListJSONArray = (JSONArray) quartersAnimListJSONArray.get(animListIndex);
+
+                                System.out.println(String.format("Quarterly(main) progress: %d / %d", animListIndex, quartersAnimListJSONArray.size()));
+
                                 for (int animIndex = 0 ; animIndex < quarterAnimListJSONArray.size(); animIndex ++) {
                                     long animID = (long) ((JSONObject) quarterAnimListJSONArray.get(animIndex)).get("id");
                                     String animURL = (String) ((JSONObject) quarterAnimListJSONArray.get(animIndex)).get("uri");
 
+                                    System.out.println(String.format("Quarterly(sub) progress: %d / %d", animIndex, quarterAnimListJSONArray.size()));
+
                                     if (animDataInputChecker(animID)) {
+                                        System.out.println("[Quarterly(sub)] Start inserting animation data!");
                                         animDataInput(animURL, animID, quarter);
+
+                                        System.out.println("[Quarterly(sub)] Finished inserting animation data.");
                                     }
                                 }
                             }
                         }else {
                             JSONObject quartersAnimListJSONObject = (JSONObject) quarterAnimJSONArrayOrJSONObjectCheckTemp.get("items");
                             Iterator quartersAnimListJSONObjecIterator = quartersAnimListJSONObject.keySet().iterator();
+
+                            int index = 0;
+
                             for (; quartersAnimListJSONObjecIterator.hasNext();) {
+
+                                System.out.println(String.format("Quarterly(main) progress: %d / %d", index, quartersAnimListJSONObject.size()));
+                                index = index + 1;
+
                                 String animKey = quartersAnimListJSONObjecIterator.next().toString();
                                 JSONArray quarterAnimListJSONArray = (JSONArray) quartersAnimListJSONObject.get(animKey);
                                 for (int animIndex = 0 ; animIndex < quarterAnimListJSONArray.size(); animIndex ++) {
                                     long animID = (long) ((JSONObject) quarterAnimListJSONArray.get(animIndex)).get("id");
                                     String animURL = (String) ((JSONObject) quarterAnimListJSONArray.get(animIndex)).get("uri");
 
+                                    System.out.println(String.format("Quarterly(sub) progress: %d / %d", animIndex, quarterAnimListJSONArray.size()));
+
                                     if (animDataInputChecker(animID)) {
+                                        System.out.println("[Quarterly(sub)] Start inserting animation data!");
+
                                         animDataInput(animURL, animID, quarter);
+
+                                        System.out.println("[Quarterly(sub)] Finished inserting animation data.");
                                     }
                                 }
                             }
                         }
                     }
+                    System.out.println(String.format("%s Quarterly Data Extraction Completed!", quarter));
                 }
             }
+
+            System.out.println("End animation and character data extraction. ");
         }
     }
 
@@ -227,6 +270,8 @@ public class HTMLParsingManager {
         // URL 정보
         final String CHARACTER_ROOT_URL_FORMAT = "https://onnada.com/character/%d";
 
+        System.out.println(String.format("[AnimDataInput (%d, %s)] Loading animation data...", animID, quarter));
+
         try {
             // Connection web
             Connection rootConnection = Jsoup.connect(animURL);
@@ -260,6 +305,8 @@ public class HTMLParsingManager {
             if (animJSONObject != null) {
                 animJSONObject = (JSONObject) animJSONObject.get("result");
 
+                System.out.println(String.format("[AnimDataInput (%d, %s)] Importing animation data succeeded!", animID, quarter));
+
                 // -----------------------------------------------------------
                 // 애니메이션 데이터
                 // -----------------------------------------------------------
@@ -276,7 +323,11 @@ public class HTMLParsingManager {
 
                 try {
                     String animImageUri = (String) ((JSONObject) animJSONObject.get("image")).get("uri");
-                    imageDownloadManager.saveImage(animImageUri, String.format("%s%s%d.jpg", Main.IMAGE_SAVE_PATH_FOR_ANIM, File.separator, animID));
+                    imageDownloadManager.saveImage(
+                            animImageUri,
+                            String.format("%s%s%d.jpg", Main.IMAGE_SAVE_PATH_FOR_ANIM, File.separator, animID),
+                            ImageDownloadDTO.ImageType.ANIM,
+                            animID);
                     databaseManager.getPreparedStatement().setInt(4, 1);
                 }catch (Exception ex) {
                     databaseManager.getPreparedStatement().setInt(4, 0);
@@ -440,6 +491,9 @@ public class HTMLParsingManager {
                 // -----------------------------------------------------------
                 // -----------------------------------------------------------
 
+                System.out.println(String.format("[AnimDataInput (%d, %s)] Animated data insertion successful!", animID, quarter));
+                System.out.println(String.format("[AnimDataInput (%d, %s)] Run an animated character data insertion task.", animID, quarter));
+
                 // items 데이터
                 JSONObject animItemsJSONObject = (JSONObject) animJSONObject.get("items");
 
@@ -453,6 +507,8 @@ public class HTMLParsingManager {
 
                         Long charID = Long.parseLong((String) charSubInfo.get("id"));
                         String url = String.format(CHARACTER_ROOT_URL_FORMAT, charID);
+
+                        System.out.println(String.format("[AnimDataInput - Character (%d(anim), %s, %d(character))] Animation character task progress: %d / %d", animID, quarter, charID, charIndex, animCharacterJSONArray.size()));
 
                         // Connection web
                         Connection charConnection = Jsoup.connect(url);
@@ -487,7 +543,11 @@ public class HTMLParsingManager {
 
                             try {
                                 String charImageUri = (String) ((JSONObject) charJSONObject.get("image")).get("uri");
-                                imageDownloadManager.saveImage(charImageUri, String.format("%s%s%d.jpg", Main.IMAGE_SAVE_PATH_FOR_CHAR, File.separator, charID));
+                                imageDownloadManager.saveImage(
+                                        charImageUri,
+                                        String.format("%s%s%d.jpg", Main.IMAGE_SAVE_PATH_FOR_CHAR, File.separator, charID),
+                                        ImageDownloadDTO.ImageType.CHAR,
+                                        charID);
                                 databaseManager.getPreparedStatement().setInt(3, 1);
                             }catch (Exception ex) {
                                 databaseManager.getPreparedStatement().setInt(3, 0);
@@ -532,7 +592,26 @@ public class HTMLParsingManager {
 
                                     if (db_index != -1) {
                                         try {
-                                            imageDownloadManager.saveImage(uri, String.format("%s%s%d_%d.jpg", Main.IMAGE_SAVE_PATH_FOR_CHAR, File.separator, charID, i + 1));
+                                            if (db_index == 4) {
+                                                imageDownloadManager.saveImage(
+                                                        uri,
+                                                        String.format("%s%s%d_1.jpg", Main.IMAGE_SAVE_PATH_FOR_CHAR, File.separator, charID),
+                                                        ImageDownloadDTO.ImageType.CHAR_M_1,
+                                                        charID);
+                                            }else if (db_index == 5) {
+                                                imageDownloadManager.saveImage(
+                                                        uri,
+                                                        String.format("%s%s%d_2.jpg", Main.IMAGE_SAVE_PATH_FOR_CHAR, File.separator, charID),
+                                                        ImageDownloadDTO.ImageType.CHAR_M_2,
+                                                        charID);
+                                            }else {
+                                                imageDownloadManager.saveImage(
+                                                        uri,
+                                                        String.format("%s%s%d_3.jpg", Main.IMAGE_SAVE_PATH_FOR_CHAR, File.separator, charID),
+                                                        ImageDownloadDTO.ImageType.CHAR_M_3,
+                                                        charID);
+                                            }
+
                                             databaseManager.getPreparedStatement().setInt(db_index, 1);
                                         }catch (Exception ex) {
                                             databaseManager.getPreparedStatement().setInt(db_index, 0);
@@ -625,11 +704,41 @@ public class HTMLParsingManager {
                             }
 
                             databaseManager.executeUpdate();
+                            databaseManager.closePreparedStatement();
+
+                            // -----------------------------------------------------------
+                            // 애니메이션 명대사 데이터 ---> *********************************
+                            // -----------------------------------------------------------
+
+                            JSONArray charFamousJSONArray = (JSONArray) charItemsJSONObject.get("famous");
+                            if (charFamousJSONArray != null) {
+                                for (int i = 0; i < charFamousJSONArray.size(); i ++) {
+                                    JSONObject jsonObject = (JSONObject) charFamousJSONArray.get(i);
+
+                                    databaseManager.setPreparedStatement("INSERT INTO onnada_anim_famous_info VALUES (?,?,?,?)");
+                                    databaseManager.getPreparedStatement().setLong(1, Long.parseLong((String) jsonObject.get("id")));
+                                    databaseManager.getPreparedStatement().setLong(2, animID);
+                                    databaseManager.getPreparedStatement().setLong(3, charID);
+
+                                    try {
+                                        databaseManager.getPreparedStatement().setString(4, (String) jsonObject.get("content"));
+                                    }catch (Exception ex) {
+                                        databaseManager.getPreparedStatement().setString(4, null);
+                                    }
+
+                                    databaseManager.executeUpdate();
+                                    databaseManager.closePreparedStatement();
+                                }
+                            }
+
+                            // -----------------------------------------------------------
+                            // ---> ******************************************************
+                            // -----------------------------------------------------------
                         }
                     }
                 }
                 // -----------------------------------------------------------
-                // ---> #####################################################
+                // ---> ######################################################
                 // -----------------------------------------------------------
             }
 
