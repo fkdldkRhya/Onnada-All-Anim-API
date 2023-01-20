@@ -4,7 +4,6 @@ import kro.kr.rhya_network.onnadaallanimapi.Main;
 import kro.kr.rhya_network.onnadaallanimapi.dto.ImageDownloadDTO;
 import kro.kr.rhya_network.onnadaallanimapi.util.DatabaseManager;
 import kro.kr.rhya_network.onnadaallanimapi.util.ImageDownloadManager;
-import org.apache.commons.lang3.time.StopWatch;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -45,7 +44,8 @@ public class HTMLParsingManager {
 
         JSONParser jsonParser = new JSONParser();
         JSONObject quartersJSONObject = null;
-        String[] quarterJsonSplit = quarterJson.split(System.lineSeparator());
+
+        String[] quarterJsonSplit = quarterJson.split("\r\n");
         for (String quarterLine : quarterJsonSplit) {
             if (quarterLine.replace(" ", "").length() > 0 && quarterLine.contains(SCRIPT_CONTAINS_TEXT)) {
                 quarterLine = scriptReplaceV2(quarterLine);
@@ -94,7 +94,7 @@ public class HTMLParsingManager {
                     quarterAnimJson = scriptReplaceV1(quarterAnimJson);
 
                     JSONObject quarterAnimJSONObject = null;
-                    String[] quarterAnimJsonSplit = quarterAnimJson.split(System.lineSeparator());
+                    String[] quarterAnimJsonSplit = quarterAnimJson.split("\r\n");
                     for (String quarterLine : quarterAnimJsonSplit) {
                         if (quarterLine.replace(" ", "").length() > 0 && quarterLine.contains(SCRIPT_CONTAINS_TEXT)) {
                             quarterLine = scriptReplaceV2(quarterLine);
@@ -171,15 +171,15 @@ public class HTMLParsingManager {
 
     private String scriptReplaceV1(String input) {
         return input
-                .replace("<script>", String.format("%s<script>%s", System.lineSeparator(), System.lineSeparator()))
-                .replace("</script>", String.format("%s</script>%s", System.lineSeparator(), System.lineSeparator()))
-                .replace("<script type=\"text/javascript\">", String.format("%s<script type=\"text/javascript\">%s", System.lineSeparator(), System.lineSeparator()));
+                .replace("<script>", String.format("%s<script>%s", "\r\n", "\r\n"))
+                .replace("</script>", String.format("%s</script>%s", "\r\n", "\r\n"))
+                .replace("<script type=\"text/javascript\">", String.format("%s<script type=\"text/javascript\">%s", "\r\n", "\r\n"));
     }
 
     private String scriptReplaceV2(String input) {
         return input
                 .replace(SCRIPT_CONTAINS_TEXT, "")
-                .replace(System.lineSeparator(), "")
+                .replace("\r\n", "")
                 .replace("var ONNADA = ", "")
                 .trim();
     }
@@ -286,7 +286,7 @@ public class HTMLParsingManager {
 
             JSONParser jsonParser = new JSONParser();
             JSONObject animJSONObject = null;
-            String[] animJsonSplit = animJson.split(System.lineSeparator());
+            String[] animJsonSplit = animJson.split("\r\n");
             for (String animLine : animJsonSplit) {
                 if (animLine.replace(" ", "").length() > 0 && animLine.contains(SCRIPT_CONTAINS_TEXT)) {
                     animLine = scriptReplaceV2(animLine);
@@ -522,7 +522,7 @@ public class HTMLParsingManager {
                         charJson = scriptReplaceV1(charJson);
 
                         JSONObject charJSONObject = null;
-                        String[] charJsonSplit = charJson.split(System.lineSeparator());
+                        String[] charJsonSplit = charJson.split("\r\n");
                         for (String charLine : charJsonSplit) {
                             if (charLine.replace(" ", "").length() > 0 && charLine.contains(SCRIPT_CONTAINS_TEXT)) {
                                 charLine = scriptReplaceV2(charLine);
