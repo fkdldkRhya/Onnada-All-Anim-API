@@ -4,9 +4,12 @@ RHYA.Network Onnada-All-Anim-API
 ![RHYA.Network Logo](rhya-network-logo.png)
 
 ## API Prerequisites
-onnada_all_anim_api_database_info.ini
+* onnada_all_anim_api_database_info.ini
 ```ini
-sdfsdfsfd
+[database]
+url=<Database URL>
+username=<Database Username>
+password=<Database Password>
 ```
 
 ## License
