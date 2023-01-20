@@ -451,7 +451,7 @@ public class HTMLParsingManager {
                     for (int charIndex = 0 ; charIndex < animCharacterJSONArray.size(); charIndex ++) {
                         JSONObject charSubInfo = (JSONObject) animCharacterJSONArray.get(charIndex);
 
-                        Long charID = (Long) charSubInfo.get("id");
+                        Long charID = Long.parseLong((String) charSubInfo.get("id"));
                         String url = String.format(CHARACTER_ROOT_URL_FORMAT, charID);
 
                         // Connection web
@@ -497,6 +497,11 @@ public class HTMLParsingManager {
 
                             try {
                                 JSONArray charMoreImage = (JSONArray) charItemsJSONObject.get("image");
+
+                                boolean check_parm_4 = false;
+                                boolean check_parm_5 = false;
+                                boolean check_parm_6 = false;
+
                                 for (int i = 0; i < charMoreImage.size(); i ++) {
                                     if (i >= 3) break;
 
@@ -508,21 +513,24 @@ public class HTMLParsingManager {
                                     switch (i) {
                                         case 0 : {
                                             db_index = 4;
+                                            check_parm_4 = true;
                                             break;
                                         }
 
                                         case 1 : {
                                             db_index = 5;
+                                            check_parm_5 = true;
                                             break;
                                         }
 
                                         case 2 : {
                                             db_index = 6;
+                                            check_parm_6 = true;
                                             break;
                                         }
                                     }
 
-                                    if (db_index == -1) {
+                                    if (db_index != -1) {
                                         try {
                                             imageDownloadManager.saveImage(uri, String.format("%s%s%d_%d.jpg", Main.IMAGE_SAVE_PATH_FOR_CHAR, File.separator, charID, i + 1));
                                             databaseManager.getPreparedStatement().setInt(db_index, 1);
@@ -531,6 +539,13 @@ public class HTMLParsingManager {
                                         }
                                     }
                                 }
+
+                                if (!check_parm_4)
+                                    databaseManager.getPreparedStatement().setInt(4, 0);
+                                if (!check_parm_5)
+                                    databaseManager.getPreparedStatement().setInt(5, 0);
+                                if (!check_parm_6)
+                                    databaseManager.getPreparedStatement().setInt(6, 0);
                             }catch (Exception ex) {
                                 databaseManager.getPreparedStatement().setInt(4, 0);
                                 databaseManager.getPreparedStatement().setInt(5, 0);

@@ -9,9 +9,6 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
         HTMLParsingManager htmlParsingManager = new HTMLParsingManager();
-        //htmlParsingManager.setAnimDataList();
-
-        System.out.println("123sdfgsdfgsdfggsdfsdfgsdfgsdfg");
-        System.out.println("   ghgghffghdfgh");
+        htmlParsingManager.setAnimDataList();
     }
 }
