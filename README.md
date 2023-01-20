@@ -1,4 +1,4 @@
-# RHYA.Network Onnada-All-Anim-API
+RHYA.Network Onnada-All-Anim-API
 ===
 
 ![RHYA.Network Logo](rhya-network-logo.png)
