@@ -11,6 +11,13 @@ url=<Database URL>
 username=<Database Username>
 password=<Database Password>
 ```
+* AnimSearch-OnnadaAllAnimAPI.txt
+```ini
+[properties]
+path_for_anim=<anim images save directory>
+path_for_character=<character images save directory>
+path_for_database=<'onnada_all_anim_api_database_info.ini' file path>
+```
 
 ## License
 MIT License
