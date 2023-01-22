@@ -299,7 +299,6 @@ public class HTMLParsingManager {
             }
 
             StringBuilder stringBuilder = new StringBuilder();
-            ImageDownloadManager imageDownloadManager = new ImageDownloadManager();
             databaseManager.connection();
 
             if (animJSONObject != null) {
@@ -323,12 +322,15 @@ public class HTMLParsingManager {
 
                 try {
                     String animImageUri = (String) ((JSONObject) animJSONObject.get("image")).get("uri");
-                    imageDownloadManager.saveImage(
+                    boolean result = ImageDownloadManager.saveImage(
                             animImageUri,
                             String.format("%s%s%d.jpg", Main.IMAGE_SAVE_PATH_FOR_ANIM, File.separator, animID),
                             ImageDownloadDTO.ImageType.ANIM,
                             animID);
-                    databaseManager.getPreparedStatement().setInt(4, 1);
+                    if (result)
+                        databaseManager.getPreparedStatement().setInt(4, 1);
+                    else
+                        databaseManager.getPreparedStatement().setInt(4, 0);
                 }catch (Exception ex) {
                     databaseManager.getPreparedStatement().setInt(4, 0);
                 }
@@ -542,13 +544,17 @@ public class HTMLParsingManager {
                             databaseManager.getPreparedStatement().setLong(2, animID);
 
                             try {
+                                System.out.println((JSONObject) charJSONObject.get("image"));
                                 String charImageUri = (String) ((JSONObject) charJSONObject.get("image")).get("uri");
-                                imageDownloadManager.saveImage(
+                                boolean result = ImageDownloadManager.saveImage(
                                         charImageUri,
                                         String.format("%s%s%d.jpg", Main.IMAGE_SAVE_PATH_FOR_CHAR, File.separator, charID),
                                         ImageDownloadDTO.ImageType.CHAR,
                                         charID);
-                                databaseManager.getPreparedStatement().setInt(3, 1);
+                                if (result)
+                                    databaseManager.getPreparedStatement().setInt(3, 1);
+                                else
+                                    databaseManager.getPreparedStatement().setInt(3, 0);
                             }catch (Exception ex) {
                                 databaseManager.getPreparedStatement().setInt(3, 0);
                             }
@@ -590,29 +596,34 @@ public class HTMLParsingManager {
                                         }
                                     }
 
+                                    boolean result = false;
+
                                     if (db_index != -1) {
                                         try {
                                             if (db_index == 4) {
-                                                imageDownloadManager.saveImage(
+                                                result = ImageDownloadManager.saveImage(
                                                         uri,
                                                         String.format("%s%s%d_1.jpg", Main.IMAGE_SAVE_PATH_FOR_CHAR, File.separator, charID),
                                                         ImageDownloadDTO.ImageType.CHAR_M_1,
                                                         charID);
                                             }else if (db_index == 5) {
-                                                imageDownloadManager.saveImage(
+                                                result = ImageDownloadManager.saveImage(
                                                         uri,
                                                         String.format("%s%s%d_2.jpg", Main.IMAGE_SAVE_PATH_FOR_CHAR, File.separator, charID),
                                                         ImageDownloadDTO.ImageType.CHAR_M_2,
                                                         charID);
                                             }else {
-                                                imageDownloadManager.saveImage(
+                                                result = ImageDownloadManager.saveImage(
                                                         uri,
                                                         String.format("%s%s%d_3.jpg", Main.IMAGE_SAVE_PATH_FOR_CHAR, File.separator, charID),
                                                         ImageDownloadDTO.ImageType.CHAR_M_3,
                                                         charID);
                                             }
 
-                                            databaseManager.getPreparedStatement().setInt(db_index, 1);
+                                            if (result)
+                                                databaseManager.getPreparedStatement().setInt(db_index, 1);
+                                            else
+                                                databaseManager.getPreparedStatement().setInt(db_index, 0);
                                         }catch (Exception ex) {
                                             databaseManager.getPreparedStatement().setInt(db_index, 0);
                                         }

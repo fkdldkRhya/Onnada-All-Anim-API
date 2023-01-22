@@ -13,13 +13,12 @@ import java.io.*;
 import java.net.URL;
 import java.sql.SQLException;
 
-public class Main implements Runnable {
+public class Main {
     public static String IMAGE_SAVE_PATH_FOR_ANIM = "\\resources\\anim_search\\images_anim";
     public static String IMAGE_SAVE_PATH_FOR_CHAR = "\\resources\\anim_search\\images_character";
     public static String DATABASE_SETTING_FILE = "\\resources\\anim_search\\onnada_all_anim_api_database_info.ini";
-    private static boolean threadExit = true;
 
-    public static void main(String[] args) throws InterruptedException, IOException {
+    public static void main(String[] args) throws InterruptedException, IOException, SQLException, ClassNotFoundException {
         // 초기 메시지 출력
         System.out.println("RHYA.Network Onnada-All-Anim-API Start");
         System.out.println("ONNADA Animation Data Extraction API (RHYA.Network only)");
@@ -45,11 +44,6 @@ public class Main implements Runnable {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
 
-        // 이미지 다운로드 Thread 시작
-        Main main = new Main();
-        Thread imageDownloadThread = new Thread(main);
-        imageDownloadThread.start();
-
         // Core 함수 호출
         try {
             System.out.println("Start, HTMLParsingManager!");
@@ -62,67 +56,16 @@ public class Main implements Runnable {
             ex.printStackTrace();
         }
 
-        // Image downloader 대기
-        while (ImageDownloadManager.imageDownloadDTOS.size() != 0) {
-            Thread.sleep(1000);
-
-            System.out.println(String.format("Wait image downloader... (Remaining Tasks: %d)", ImageDownloadManager.imageDownloadDTOS.size()));
-        }
-
-        threadExit = false;
-        imageDownloadThread.join();
-
-        // 이미지 오류 확인 - Anim
-        File dirForImageCheckToAnim = new File(IMAGE_SAVE_PATH_FOR_ANIM);
-        File filesForImageCheckToAnim[] = dirForImageCheckToAnim.listFiles();
-        for (int i = 0; i < filesForImageCheckToAnim.length; i++) {
-            System.out.println(String.format("[Image File Checker (Anim)] %d / %d", i , filesForImageCheckToAnim.length));
-
-            if (!imageChecker(filesForImageCheckToAnim[i]))
-                System.out.println(String.format("[Anim] Image file removal succeeded! (%s, %b)", filesForImageCheckToAnim[i].getPath(), filesForImageCheckToAnim[i].delete()));
-        }
-        // 이미지 오류 확인 - Char
-        File dirForImageCheckToCharacter = new File(IMAGE_SAVE_PATH_FOR_CHAR);
-        File filesForImageCheckToCharacter[] = dirForImageCheckToCharacter.listFiles();
-        for (int i = 0; i < filesForImageCheckToCharacter.length; i++) {
-            System.out.println(String.format("[Image File Checker (Character)] %d / %d", i , filesForImageCheckToCharacter.length));
-
-            if (!imageChecker(filesForImageCheckToCharacter[i])) {
-                System.out.println(String.format("[Character] Image file removal succeeded! (%s, %b)", filesForImageCheckToCharacter[i].getPath(), filesForImageCheckToCharacter[i].delete()));
-            }
-        }
-
         // 실행 시간 출력
         stopWatch.stop();
+
         System.out.println("");
         System.out.println("---------------------------------------------");
         System.out.println(String.format("Total StopWatch 'Onnada-All-Anim-API': running time = %d ns", stopWatch.getTime()));
         System.out.println("");
     }
 
-    @Override
-    public void run() {
-        try {
-            while (threadExit) {
-                // 0.1초 대기
-                Thread.sleep(100);
-
-                if (ImageDownloadManager.imageDownloadDTOS.size() > 0) {
-                    ImageDownloadDTO imageDownloadDTO = ImageDownloadManager.imageDownloadDTOS.get(0);
-
-                    if (!new File(imageDownloadDTO.getFilePath()).exists()) {
-                        imageDownloadTask(imageDownloadDTO);
-                    }
-
-                    ImageDownloadManager.imageDownloadDTOS.remove(0);
-                }
-            }
-        }catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    private void imageDownloadTask(ImageDownloadDTO imageDownloadDTO) throws SQLException, IOException, ClassNotFoundException {
+    public static boolean imageDownloadTask(ImageDownloadDTO imageDownloadDTO) throws SQLException, IOException, ClassNotFoundException {
         try {
             URL url;
             InputStream in = null;
@@ -143,6 +86,8 @@ public class Main implements Runnable {
 
                 in.close();
                 out.close();
+
+                return true;
             } catch (Exception e) {
                 e.printStackTrace();
 
@@ -216,25 +161,8 @@ public class Main implements Runnable {
             System.out.println(String.format("[ Auto Fix Result ] Database update: %b", updateChecker));
             System.out.println(String.format("[ Auto Fix Result ] Image file delete: %b", new File(imageDownloadDTO.getFilePath()).delete()));
             System.out.println("<== -------------------------- ==>");
+
+            return false;
         }
-    }
-
-    private static boolean imageChecker(File file) {
-        boolean result;
-
-        try {
-            BufferedImage buf = ImageIO.read(file);
-
-            if (buf == null){
-                result = false;
-            }else {
-                buf = null;
-                result = true;
-            }
-        } catch (Exception e) {
-            result = false;
-        }
-
-        return result;
     }
 }
