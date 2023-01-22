@@ -311,7 +311,7 @@ public class HTMLParsingManager {
                 // 애니메이션 데이터
                 // -----------------------------------------------------------
 
-                databaseManager.setPreparedStatement("INSERT INTO onnada_anim_info VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                databaseManager.setPreparedStatement("INSERT INTO onnada_anim_info (anim_id, quarter, week, image, name_kr, name_v2, description, original, director, screenplay, character_design, music, production_company, genre, classification, keyword, country_of_production, air_date, age_classification) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
                 databaseManager.getPreparedStatement().setLong(1, animID);
                 databaseManager.getPreparedStatement().setString(2, quarter);
 
@@ -537,7 +537,7 @@ public class HTMLParsingManager {
                         if (charJSONObject != null) {
                             charJSONObject = (JSONObject) charJSONObject.get("result");
 
-                            databaseManager.setPreparedStatement("INSERT INTO onnada_anim_character_info VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                            databaseManager.setPreparedStatement("INSERT INTO onnada_anim_character_info (character_id, anim_id, image, more_image_1, more_image_2, more_image_3, name_kr, name_en, name_jp1, name_jp2, voice_actor_name_kr, voice_actor_name_en, voice_actor_name_jp1, profile, age, birthday, height) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
                             databaseManager.getPreparedStatement().setLong(1, charID);
                             databaseManager.getPreparedStatement().setLong(2, animID);
 
@@ -680,7 +680,13 @@ public class HTMLParsingManager {
                             }
 
                             try {
-                                databaseManager.getPreparedStatement().setString(14, (String) charJSONObject.get("profile"));
+                                String value = (String) charJSONObject.get("profile");
+                                if (value == null || value.replace(" ", "").length() == 0) {
+                                    databaseManager.getPreparedStatement().setString(14, null);
+                                }else {
+                                    Document doc = Jsoup.parseBodyFragment(value);
+                                    databaseManager.getPreparedStatement().setString(14, doc.text());
+                                }
                             }catch (Exception ex) {
                                 databaseManager.getPreparedStatement().setString(14, null);
                             }
@@ -715,7 +721,7 @@ public class HTMLParsingManager {
                                 for (int i = 0; i < charFamousJSONArray.size(); i ++) {
                                     JSONObject jsonObject = (JSONObject) charFamousJSONArray.get(i);
 
-                                    databaseManager.setPreparedStatement("INSERT INTO onnada_anim_famous_info VALUES (?,?,?,?)");
+                                    databaseManager.setPreparedStatement("INSERT INTO onnada_anim_famous_info (famous_id, anim_id, character_id, text) VALUES (?,?,?,?)");
                                     databaseManager.getPreparedStatement().setLong(1, Long.parseLong((String) jsonObject.get("id")));
                                     databaseManager.getPreparedStatement().setLong(2, animID);
                                     databaseManager.getPreparedStatement().setLong(3, charID);
