@@ -3,12 +3,9 @@ package kro.kr.rhya_network.onnadaallanimapi;
 import kro.kr.rhya_network.onnadaallanimapi.core.HTMLParsingManager;
 import kro.kr.rhya_network.onnadaallanimapi.dto.ImageDownloadDTO;
 import kro.kr.rhya_network.onnadaallanimapi.util.DatabaseManager;
-import kro.kr.rhya_network.onnadaallanimapi.util.ImageDownloadManager;
 import org.apache.commons.lang3.time.StopWatch;
 import org.ini4j.Ini;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.URL;
 import java.sql.SQLException;
