@@ -6,8 +6,14 @@ import kro.kr.rhya_network.onnadaallanimapi.util.DatabaseManager;
 import org.apache.commons.lang3.time.StopWatch;
 import org.ini4j.Ini;
 
+import javax.net.ssl.*;
 import java.io.*;
 import java.net.URL;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.sql.SQLException;
 
 public class Main {
@@ -43,6 +49,8 @@ public class Main {
 
         // Core 함수 호출
         try {
+            setSSL();
+
             System.out.println("Start, HTMLParsingManager!");
 
             HTMLParsingManager htmlParsingManager = new HTMLParsingManager();
@@ -50,16 +58,43 @@ public class Main {
         }catch (Exception ex) {
             // 오류 발생 작업 중지!
             System.out.println("<== [WARNING] ==>");
-            ex.printStackTrace();
+            System.out.println(ex.toString());
         }
 
         // 실행 시간 출력
         stopWatch.stop();
 
-        System.out.println("");
+        System.out.println();
         System.out.println("---------------------------------------------");
         System.out.println(String.format("Total StopWatch 'Onnada-All-Anim-API': running time = %d ns", stopWatch.getTime()));
-        System.out.println("");
+        System.out.println();
+    }
+
+    public static void setSSL() throws NoSuchAlgorithmException, KeyManagementException {
+        TrustManager[] trustAllCerts = new TrustManager[] {
+                new X509TrustManager() {
+                    @Override
+                    public X509Certificate[] getAcceptedIssuers() {
+                        // TODO Auto-generated method stub
+                        return null;
+                    }
+                    @Override
+                    public void checkClientTrusted(X509Certificate[] chain, String authType)
+                            throws CertificateException {
+                        // TODO Auto-generated method stub
+
+                    }
+                    @Override
+                    public void checkServerTrusted(X509Certificate[] chain, String authType)
+                            throws CertificateException {
+                        // TODO Auto-generated method stub
+                    }
+                }
+        };
+        SSLContext sc = SSLContext.getInstance("SSL");
+        sc.init(null, trustAllCerts, new SecureRandom());
+        HttpsURLConnection.setDefaultHostnameVerifier((hostname, session) -> true);
+        HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
     }
 
     public static boolean imageDownloadTask(ImageDownloadDTO imageDownloadDTO) throws SQLException, IOException, ClassNotFoundException {

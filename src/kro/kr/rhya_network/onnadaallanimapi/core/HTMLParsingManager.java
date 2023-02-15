@@ -27,7 +27,7 @@ public class HTMLParsingManager {
 
     public void setAnimDataList() throws IOException, ParseException, SQLException, ClassNotFoundException {
         // URL 정보
-        final String QUARTER_ROOT_URL = "https://onnada.com/anime/quarter";
+        final String QUARTER_ROOT_URL = "http://onnada.com/anime/quarter";
 
         System.out.println("Loading quarterly animation data...");
 
